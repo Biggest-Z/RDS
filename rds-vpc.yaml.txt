@@ -1,7 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   AWS CloudFormation template to create a VPC in the US-West-2 Region
-  spanning three Availability Zones with one subnet in each AZ.
+  spanning three Availability Zones with one subnet in each AZ, including an RDS MySQL Database.
+
+# ============================================================
+# REVISION HISTORY
+# ============================================================
+# Revision: 1.1
+# Date: June 9, 2026
+# Description of Change: Integrated Amazon RDS MySQL instance (`RdsInstance`) 
+#                        and corresponding DB Subnet Group (`RdsSubnetGroup`) 
+#                        mapped across three public Availability Zone subnets.
+# ============================================================
 
 # ------------------------------------------------------------
 # Parameters
@@ -127,6 +137,33 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnetAZ3
       RouteTableId: !Ref PublicRouteTable
+
+  # DB Subnet Group (Tells RDS which subnets within the VPC it can deploy into)
+  RdsSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for playground-db"
+      SubnetIds:
+        - !Ref PublicSubnetAZ1
+        - !Ref PublicSubnetAZ2
+        - !Ref PublicSubnetAZ3
+      Tags:
+        - Key: Name
+          Value: DBSubnetGroup-zayher3602
+
+  # RDS Database Instance
+  RdsInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBSubnetGroupName: !Ref RdsSubnetGroup
+      VPCSecurityGroups:
+        - <SECURITY-GROUP-ID>  # Ensure you replace this with a valid Security Group ID
+      AllocatedStorage: '5'
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: playground-db
+      Engine: MySQL
+      MasterUsername: Admin
+      MasterUserPassword: CloudAcademy123!
 
 # ------------------------------------------------------------
 # Outputs
